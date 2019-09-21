@@ -1,5 +1,6 @@
 import numpy
 import random
+import utils
 
 def txtTolist(txt):
     lst = txt.split()
@@ -738,3 +739,19 @@ precipitation = [numpy.random.normal(0.5,0.125) for i in range(len(dates))]
 
 print (precipitation)
 print (give_depths(precipitation))
+
+def format_and_save_data(precipitation, depths_dict):
+    """
+    Reformats generated data into numpy arrays, and saves them to files.
+    """
+    numpy.savetxt("precip_train.txt", precipitation)
+    depths = numpy.empty((len(depths_dict[0]), len(depths_dict.keys())))
+
+    for id, coord in utils.coords_to_id().values():
+        depths[:, id] = depths_dict[coord]
+
+
+
+
+
+format_and_save_data(precipitation, give_depths(precipitation))

@@ -20,7 +20,7 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils
+import utils, testdeyda
 
 
 
@@ -136,15 +136,27 @@ def server_app(db):
 	Runner for server.
 	"""
 	db.add_all_nodes("coords.txt")
-
-	model = Model(db.get_nodes())
+	model = RFModel(db.get_nodes())
 	while True:
-		# Each day, add date as key to dataset
+		# Each day, add date as key to dataset and drop the oldest day
 		for i in range(7):
 			time.sleep(86400)
 
-		# Each week, retrain the model
+			date_to_drop = utils.days_ago(utils.DAYS_TO_KEEP + 1)
+			nodes = db.get_nodes()
+			for node in nodes:
+				node["rain_data"].pop(date_to_drop)
+				node["avg_levels"].pop(date_to_drop)
+				node["is_flooded"].pop(date_to_drop)
 
+				node["rain_data"][utils.cur_date()] = []
+				node["avg_levels"][utils.cur_date()] = 0
+				node["is_flooded"][utils.cur_date()] = False
+
+		# Each week, retrain the model
+		# In production, use weather API data. For now, use generated values to test.
+		# model = RFModel(weather.get_precips(start_date, end_date), db.get_nodes())
+		precipitation = testdeyda.precipitation
 
 
 
