@@ -3,6 +3,9 @@ Utility functions.
 """
 import datetime
 
+FLOODED_THRESHOLD = 4 # inches
+DAYS_TO_KEEP = 730 # number of days to use in training data
+
 def fmt(n):
     """
     Formats n as a string, with leading 0 if single-digit
@@ -28,7 +31,8 @@ def generate_dates():
     for yyyy in ["2018", "2019"]:
         for mm in range(1, 13):
             for dd in range(1, days_per_mo[mm] + 1):
-
+                if mm == 9 and dd >= 21 and yyyy == "2019":
+                    return dates
                 dates.append(yyyy + fmt(mm) + fmt(dd))
     return dates
 

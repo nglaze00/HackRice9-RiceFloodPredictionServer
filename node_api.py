@@ -24,7 +24,6 @@ def get_reported_water_levels():
     Returns a dictionary of reported water levels. Indexed rain_data[node coords][date][report #]
     """
     nodes = DB.get_nodes()
-    dates = utils.generate_dates()
     water_levels = {}
     for node in nodes:
         water_levels[tuple(node["coords"])] = node["rain_data"]
@@ -50,17 +49,15 @@ def get_reported_water_levels_today():
     """
     today = utils.cur_date()
     return {node["coords"] : node["rain_data"][today] for node in DB.get_nodes()}
-def compute_water_level_avgs():
-    """
-    Returns a 2-D Numpy array of nodewise daily average water levels. Indexed rain_data[node_id][date].
-    :return: rain_data (numpy array) TODO
-    """
-    pass
-def drop_old_data():
-    """
-    Drops data older than 1.5 yrs.
-    # TODO
-    """
-    pass
 
-# TODO remove the one value in current day, first node
+def get_average_water_levels(date):
+    """
+    Returns a dictionary with key: node id, value: average water level on that date TODO
+    """
+    return {node["id"] : node["avg_levels"][date] for node in DB.get_nodes()}
+
+def get_is_flooded(date):
+    """
+    Returns a dictionary with key: node id, value: whether the node is flooded on the given date TODO
+    """
+    return {node["id"] : node["is_flooded"][date] for node in DB.get_nodes()}
