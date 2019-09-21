@@ -135,9 +135,9 @@ def server_app(db):
 	"""
 	Runner for server.
 	"""
-	db.add_all_nodes("coords.txt")
+	# db.add_all_nodes("coords.txt")
 
-	model = Model(db.get_nodes())
+	# model = Model(db.get_nodes())
 	while True:
 		# Each day, add date as key to dataset
 		for i in range(7):
@@ -161,13 +161,26 @@ def handleClick():
 	print(request.data)
 	return request.form
 
+@flask_app.route('/floodreport', methods=["POST"])
+@cross_origin(supports_credentials=True)
+def handleFloodReport():
+	print(request.data)
+	print(request.get_json(force=True)["node"])
+
+	##
+	# Data contains:
+	# node
+	# type (0 is lowest, 3 is worst severity)
+	##
+	data = request.get_json(force=True)
+	node = data["node"]
+	type = data["type"]
+
+	return request.form
+
 @flask_app.route('/nodes')
 def getNodes():
 	return jsonify(db.get_nodes())
-
-# @app.route('/click')
-# def handle_click(click):
-# 	coll.add(click)
 
 
 if __name__ == '__main__':
