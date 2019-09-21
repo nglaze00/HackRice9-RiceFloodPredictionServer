@@ -11,6 +11,11 @@ class LinearRainModel:
         """
         Trains a linear model using the data stored in depths_train.txt and precip_train.txt.
         """
+        self.thresholds = []
+
+    def get_tresholds(self):
+
+        return self.thresholds
         precip = np.loadtxt("precip_train.txt")
         depths = np.loadtxt("depths_train.txt")
 
@@ -25,6 +30,23 @@ class LinearRainModel:
         :param precip:
         :return:
         """
+        for i in range(len(depths)):
+
+            mean = 0
+
+            for j in range(len(precip)):
+
+                if depths[i][j] >= utils.FLOODED_THRESHOLD:
+
+                    mean += depths[i][j]
+
+            mean = float(mean)/len(precip)
+
+            self.thresholds.append(mean)
+
+
+
+
 
 
     def fit(self, precip):
@@ -32,4 +54,3 @@ class LinearRainModel:
         Given an amount of rain (in inches), return a list where flooded[i] is whether node i will be flooded
         :return:
         """
-        return [precip >= self.thresholds[i] for i in range(len(self.thresholds))]

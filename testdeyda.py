@@ -700,11 +700,46 @@ text_data = """ 20180101
 20190919
 20190920
 """
-dates = text_data.split()
 
 dict1 = {}
 
+def format(int):
 
+    if int < 10 :
+
+        return str(0)+str(int)
+
+    else:
+        return str(int)
+
+
+def generate_Dates():
+
+    days_per_mo = [None,31,28,31,30,31,30,31,31,30,31,30,31]
+
+    last_string = []
+
+    for year in [2018,2019]:
+
+        for month in range(1,13):
+
+            breakflag = False
+
+            for days in range(1, days_per_mo[month] + 1):
+
+                if year == 2019 and month == 9 and days == 21:
+                    breakflag = True
+
+                    break
+
+                last_string.append(str(year)+format(month)+format(days))
+
+            if breakflag:
+               break
+
+    return last_string
+
+dates = generate_Dates()
 
 
 
@@ -721,7 +756,7 @@ def give_depths(precipitation):
 
         for i in range(len(dates)):
 
-            integral += precipitation[i] - coeff
+            integral += 20*(precipitation[i] - coeff)
 
             if integral >= 0:
 
