@@ -20,7 +20,7 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils, testdeyda, model
+import utils, testdeyda, model, node_api
 
 
 
@@ -187,7 +187,9 @@ def handleFloodReport():
 	##
 	data = request.get_json(force=True)
 	node = data["node"]
-	type = data["type"]
+	water_level = data["type"]
+	node_api.report_water_level(node["coords"], water_level * 2) # convert to inches
+
 
 	return request.form
 
