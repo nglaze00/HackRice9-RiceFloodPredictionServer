@@ -756,7 +756,7 @@ def give_depths(precipitation):
 
         for i in range(len(dates)):
 
-            integral += 20*(precipitation[i] - coeff)
+            integral += 20*(precipitation[i] - coeff/3)
 
             if integral >= 0:
 
