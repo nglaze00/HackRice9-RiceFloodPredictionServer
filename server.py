@@ -107,7 +107,6 @@ class MongoDB:
 		empty_date_lists = {date: [] for date in utils.generate_dates()}
 		empty_date_scalars = {date: 0 for date in utils.generate_dates()}
 		empty_date_bools = {date: False for date in utils.generate_dates()}
-
 		f = open(filename)
 		coords = []
 		for node_id, line in enumerate(f.readlines()):

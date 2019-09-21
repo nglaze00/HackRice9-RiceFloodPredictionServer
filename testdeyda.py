@@ -742,21 +742,20 @@ def generate_Dates():
 dates = generate_Dates()
 
 
-
 def give_depths(precipitation):
 
     nodes_to_depths_for_each_day = {}
 
     for item in node_list:
+        coeff = random.randrange(5) / 10
 
-        coeff = numpy.random.normal(0.7,0.05)
 
         integral = 0
         list_for_node = []
 
         for i in range(len(dates)):
 
-            integral += 20*(precipitation[i] - coeff/3)
+            integral += 20*(3*precipitation[i] - coeff)
 
             if integral >= 0:
 

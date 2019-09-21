@@ -1,6 +1,6 @@
 import numpy as np
 import sklearn.ensemble
-
+import utils
 # TODO MACHINE LEARNING W00
 
 class LinearRainModel:
@@ -12,15 +12,14 @@ class LinearRainModel:
         Trains a linear model using the data stored in depths_train.txt and precip_train.txt.
         """
         self.thresholds = []
-
-    def get_tresholds(self):
-
-        return self.thresholds
         precip = np.loadtxt("precip_train.txt")
         depths = np.loadtxt("depths_train.txt")
 
         self.thresholds = []
         self.train(depths, precip)
+
+    def get_thresholds(self):
+        return self.thresholds
 
 
     def train(self, depths, precip):
@@ -30,27 +29,29 @@ class LinearRainModel:
         :param precip:
         :return:
         """
-        for i in range(len(depths)):
+        for node in range(len(depths[0])):
+            
+            flood_levels = []
 
-            mean = 0
 
-            for j in range(len(precip)):
+            for date in range(len(depths)):
 
-                if depths[i][j] >= utils.FLOODED_THRESHOLD:
 
-                    mean += depths[i][j]
+                if depths[date][node] >= utils.FLOODED_THRESHOLD:
 
-            mean = float(mean)/len(precip)
-
-            self.thresholds.append(mean)
+                    flood_levels.append(precip[date])
 
 
 
+            self.thresholds.append(np.mean(flood_levels))
 
 
-
-    def fit(self, precip):
+    def fit(self, precip_today):
         """
         Given an amount of rain (in inches), return a list where flooded[i] is whether node i will be flooded
         :return:
         """
+        return [precip_today >= self.thresholds[i] for i in range(len(self.thresholds))]
+
+m = LinearRainModel()
+print(m.thresholds)
