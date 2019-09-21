@@ -1,5 +1,6 @@
 import numpy as np
 import sklearn.ensemble
+import utils
 
 # TODO MACHINE LEARNING W00
 
@@ -11,7 +12,11 @@ class LinearRainModel:
         """
         Trains a linear model using the data stored in nodes. (pass in db.get_nodes())
         """
-        self.thresholds = {}
+        self.thresholds = []
+
+    def get_tresholds(self):
+
+        return self.thresholds
 
 
     def train(self, depths, precip):
@@ -21,6 +26,23 @@ class LinearRainModel:
         :param precip:
         :return:
         """
+        for i in range(len(depths)):
+
+            mean = 0
+
+            for j in range(len(precip)):
+
+                if depths[i][j] >= utils.FLOODED_THRESHOLD:
+
+                    mean += depths[i][j]
+
+            mean = float(mean)/len(precip)
+
+            self.thresholds.append(mean)
+
+
+
+
         
 
     def fit(self, precip):
