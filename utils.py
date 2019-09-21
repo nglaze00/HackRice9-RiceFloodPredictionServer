@@ -1,3 +1,8 @@
+"""
+Utility functions.
+"""
+import datetime
+
 def fmt(n):
     """
     Formats n as a string, with leading 0 if single-digit
@@ -6,6 +11,13 @@ def fmt(n):
         return "0" + str(n)
     else:
         return str(n)
+
+def cur_date():
+    """
+    Returns current date, formatted YYYYMMDD
+    """
+    now = datetime.datetime.now()
+    return fmt(now.year) + fmt(now.month) + fmt(now.day)
 
 def generate_dates():
     """
@@ -19,3 +31,5 @@ def generate_dates():
 
                 dates.append(yyyy + fmt(mm) + fmt(dd))
     return dates
+
+
