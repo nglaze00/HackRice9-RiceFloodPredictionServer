@@ -1,5 +1,6 @@
 import numpy
 import random
+import utils
 
 def txtTolist(txt):
     lst = txt.split()
@@ -699,12 +700,46 @@ text_data = """ 20180101
 20190919
 20190920
 """
-dates = text_data.split()
 
 dict1 = {}
 
+def format(int):
+
+    if int < 10 :
+
+        return str(0)+str(int)
+
+    else:
+        return str(int)
 
 
+def generate_Dates():
+
+    days_per_mo = [None,31,28,31,30,31,30,31,31,30,31,30,31]
+
+    last_string = []
+
+    for year in [2018,2019]:
+
+        for month in range(1,13):
+
+            breakflag = False
+
+            for days in range(1, days_per_mo[month] + 1):
+
+                if year == 2019 and month == 9 and days == 21:
+                    breakflag = True
+
+                    break
+
+                last_string.append(str(year)+format(month)+format(days))
+
+            if breakflag:
+               break
+
+    return last_string
+
+dates = generate_Dates()
 
 
 def give_depths(precipitation):
@@ -712,15 +747,15 @@ def give_depths(precipitation):
     nodes_to_depths_for_each_day = {}
 
     for item in node_list:
+        coeff = random.randrange(5) / 10
 
-        coeff = numpy.random.normal(0.7,0.05)
 
         integral = 0
         list_for_node = []
 
         for i in range(len(dates)):
 
-            integral += precipitation[i] - coeff
+            integral += 20*(3*precipitation[i] - coeff)
 
             if integral >= 0:
 
@@ -736,5 +771,21 @@ def give_depths(precipitation):
 
 precipitation = [numpy.random.normal(0.5,0.125) for i in range(len(dates))]
 
-print (precipitation)
-print (give_depths(precipitation))
+def format_and_save_data(precipitation, depths_dict):
+    """
+    Reformats generated data into numpy arrays, and saves them to files.
+    """
+    numpy.savetxt("precip_train.txt", precipitation)
+    depths = numpy.empty((len(depths_dict[list(depths_dict.keys())[0]]), len(depths_dict.keys())))
+    for coord, id in utils.coords_to_id().items():
+        depths[:, id] = depths_dict[coord]
+
+    depths *= 9 / numpy.max(depths)
+    # print(len(depths[depths > 4]))
+    numpy.savetxt("depths_train.txt", depths)
+
+
+
+
+
+format_and_save_data(precipitation, give_depths(precipitation))
