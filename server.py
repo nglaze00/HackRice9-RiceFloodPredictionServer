@@ -12,7 +12,8 @@ node_dict = {
 
 
 import pymongo, numpy as np
-from flask import Flask
+from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 import utils
 
 class MongoDB:
@@ -31,14 +32,14 @@ class MongoDB:
 		:param value: value of that node variable
 		:return: node dict
 		"""
-		return self._nodes.find_one({key : value})
+		return self._nodes.find_one({key : value}, {'_id': False})
 
 	def get_nodes(self):
 		"""
 		Queries the mongoDB database for all nodes
 		:return:
 		"""
-		return list(self._nodes.find())
+		return list(self._nodes.find({}, {'_id': False}))
 
 
 
@@ -49,7 +50,7 @@ class MongoDB:
 		:param coords: (lat, long)
 		:param lvl: integer (inches)
 		"""
-		node = self._nodes.find_one({"coords" : coords})
+		node = self._nodes.find_one({"coords" : coords}, {'_id': False})
 
 		if not node:
 			raise KeyError()
@@ -101,10 +102,21 @@ db = MongoDB()
 
 
 app = Flask(__name__)
+CORS(app, support_credentials=True)
 
 @app.route('/')
 def hello():
 	return "Hello world!"
+
+@app.route('/click', methods=["POST"])
+@cross_origin(supports_credentials=True)
+def handleClick():
+	print(request.data)
+	return request.form
+
+@app.route('/nodes')
+def getNodes():
+	return jsonify(db.get_nodes())
 
 # @app.route('/click')
 # def handle_click(click):
