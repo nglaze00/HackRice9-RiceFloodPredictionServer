@@ -19,6 +19,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
+import node_api
 
 import utils, testdeyda, model
 
@@ -194,6 +195,7 @@ def handleFloodReport():
 @flask_app.route('/nodes')
 def getNodes():
 	return jsonify(db.get_nodes())
+
 
 
 if __name__ == '__main__':
