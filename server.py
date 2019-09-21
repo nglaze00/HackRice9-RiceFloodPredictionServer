@@ -9,6 +9,13 @@ col = pymongo.collection.Collection(db, 'node')
 
 print(col.find_one())
 
+newdoc = {
+	"name": "test2",
+	"location": [1, 2]
+}
+
+col.insert_one(newdoc)
+
 app = Flask(__name__)
 
 @app.route('/')
