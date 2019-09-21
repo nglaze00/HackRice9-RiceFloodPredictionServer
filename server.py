@@ -21,8 +21,8 @@ from threading import Thread
 import time
 import node_api
 
-import utils, testdeyda, model
-
+import utils, testdeyda, model, node_api
+import weather
 
 
 class MongoDB:
@@ -77,12 +77,17 @@ class MongoDB:
 		"""
 		Updates the average water level & binary is_flooded at given node, for given date.
 		"""
-
 		node["avg_levels"][date] = np.mean(node["rain_data"][utils.cur_date()])
-		if node["avg_levels"][date] > utils.FLOODED_THRESHOLD:
-			node["is_flooded"][date] = True
+		if len(node["rain_data"][date]) == 0:
+			# If no reports on this day, use the linear model
+			if linear_model.fit(weather.get_precipitation(date)):
+				node["is_flooded"][node["id"]] = 2
+			else:
+				node["is_flooded"][node["id"]] = 0
+		elif node["is_flooded"][date]:
+			node["is_flooded"][node["id"]] = 1
 		else:
-			node["is_flooded"][date] = False
+			node["is_flooded"][node["id"]] = 0
 
 		update = {"$set": {"avg_levels" : node["avg_levels"], "is_flooded" : node["is_flooded"]}}
 		self._nodes.update({"id": node["id"]}, update)
@@ -153,7 +158,7 @@ def server_app(db):
 
 				node["rain_data"][utils.cur_date()] = []
 				node["avg_levels"][utils.cur_date()] = 0
-				node["is_flooded"][utils.cur_date()] = False
+				node["is_flooded"][utils.cur_date()] = 0
 
 		# Each week, retrain the model
 		# In production, use weather API data. For now, use generated values to test.
@@ -188,7 +193,9 @@ def handleFloodReport():
 	##
 	data = request.get_json(force=True)
 	node = data["node"]
-	type = data["type"]
+	water_level = data["type"]
+	node_api.report_water_level(node["coords"], water_level * 2) # convert to inches
+
 
 	return request.form
 
