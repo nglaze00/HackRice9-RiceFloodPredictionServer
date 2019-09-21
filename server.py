@@ -3,10 +3,13 @@ Functions for querying the mongoDB database.
 
 Node signature:
 node_dict = {
-			"id": node_id,
-			"coords": coords (latitude, longitude),
-			"rain_data": {date : [reported rain values]}
-		}
+				"id": node_id,
+				"coords": coords,
+				"rain_data": reported rain data, indexed by date
+				"avg_levels": average reported rain data, indexed by date
+				"is_flooded": whether a node is flooded on a given day, indexed by date
+				"entrance": -1 if node is not a campus entrance, entrance number if it is
+			}
 """
 
 
@@ -14,7 +17,12 @@ node_dict = {
 import pymongo, numpy as np
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
-import utils
+from threading import Thread
+import time
+
+import utils, testdeyda
+
+
 
 class MongoDB:
 	def __init__(self):
@@ -46,6 +54,7 @@ class MongoDB:
 	def report_rain_level(self, date, coords, lvl):
 		"""
 		Adds the measured rain level @ coords on date to that node's rain level dataset in mongoDB.
+		Also updates avg level & is_flooded for that date.
 		:param date: YYYYMMDD
 		:param coords: (lat, long)
 		:param lvl: integer (inches)
@@ -60,6 +69,22 @@ class MongoDB:
 		update = {"$set": {"rain_data": node["rain_data"]}}
 		self._nodes.update({"id" : node["id"]}, update)
 
+		self._update_avg_level(date, node)
+
+	def _update_avg_level(self, date, node):
+		"""
+		Updates the average water level & binary is_flooded at given node, for given date.
+		"""
+
+		node["avg_levels"][date] = np.mean(node["rain_data"][utils.cur_date()])
+		if node["avg_levels"][date] > utils.FLOODED_THRESHOLD:
+			node["is_flooded"][date] = True
+		else:
+			node["is_flooded"][date] = False
+
+		update = {"$set": {"avg_levels" : node["avg_levels"], "is_flooded" : node["is_flooded"]}}
+		self._nodes.update({"id": node["id"]}, update)
+
 	def clear_rain_level(self, date, coords): # todo remove
 		node = self._nodes.find_one({"coords": coords})
 
@@ -73,10 +98,14 @@ class MongoDB:
 
 	def add_all_nodes(self, filename):
 		"""
-		Adds all nodes from filename to the mongoDB database
+		Clears all data from database, then adds all nodes from filename to the mongoDB database
 		:param filename: string
 		"""
-		empty_dates_dict = {date: [] for date in utils.generate_dates()}
+		self._nodes.delete_many({})
+
+		empty_date_lists = {date: [] for date in utils.generate_dates()}
+		empty_date_scalars = {date: 0 for date in utils.generate_dates()}
+		empty_date_bools = {date: False for date in utils.generate_dates()}
 
 		f = open(filename)
 		coords = []
@@ -89,32 +118,62 @@ class MongoDB:
 			node_dict = {
 				"id": node_id,
 				"coords": coords,
-				"rain_data": empty_dates_dict
+				"rain_data": empty_date_lists,
+				"avg_levels": empty_date_scalars,
+				"is_flooded": empty_date_bools,
+				"entrance": -1
 			}
 			self._nodes.insert(node_dict)
 
 
-
 db = MongoDB()
 
-# add_all_nodes("coords.txt")
+
 # print(get_nodes())
 
+def server_app(db):
+	"""
+	Runner for server.
+	"""
+	db.add_all_nodes("coords.txt")
+	model = RFModel(db.get_nodes())
+	while True:
+		# Each day, add date as key to dataset and drop the oldest day
+		for i in range(7):
+			time.sleep(86400)
 
-app = Flask(__name__)
-CORS(app, support_credentials=True)
+			date_to_drop = utils.days_ago(utils.DAYS_TO_KEEP + 1)
+			nodes = db.get_nodes()
+			for node in nodes:
+				node["rain_data"].pop(date_to_drop)
+				node["avg_levels"].pop(date_to_drop)
+				node["is_flooded"].pop(date_to_drop)
 
-@app.route('/')
+				node["rain_data"][utils.cur_date()] = []
+				node["avg_levels"][utils.cur_date()] = 0
+				node["is_flooded"][utils.cur_date()] = False
+
+		# Each week, retrain the model
+		# In production, use weather API data. For now, use generated values to test.
+		# model = RFModel(weather.get_precips(start_date, end_date), db.get_nodes())
+		precipitation = testdeyda.precipitation
+
+
+
+flask_app = Flask(__name__)
+CORS(flask_app, support_credentials=True)
+
+@flask_app.route('/')
 def hello():
 	return "Hello world!"
 
-@app.route('/click', methods=["POST"])
+@flask_app.route('/click', methods=["POST"])
 @cross_origin(supports_credentials=True)
 def handleClick():
 	print(request.data)
 	return request.form
 
-@app.route('/nodes')
+@flask_app.route('/nodes')
 def getNodes():
 	return jsonify(db.get_nodes())
 
@@ -124,6 +183,9 @@ def getNodes():
 
 
 if __name__ == '__main__':
-	app.run()
+	# db = MongoDB()
+
+	Thread(target=flask_app.run, args=[]).start()
+	Thread(target=server_app, args=[db]).start()
 
 
