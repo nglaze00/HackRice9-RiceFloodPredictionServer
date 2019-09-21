@@ -2,10 +2,11 @@
 API for interacting with Rice campus nodes
 """
 import server
-import utils
+import utils, weather
 import numpy as np
 
 DB = server.db
+linear_model = server.linear_model
 
 # INPUT
 
@@ -58,6 +59,11 @@ def get_average_water_levels(date):
 
 def get_is_flooded(date):
     """
-    Returns a dictionary with key: node id, value: whether the node is flooded on the given date TODO
+    Returns a dictionary with key: node id, value: whether the node is flooded on the given date.
     """
+    is_flooded = {}
+    for node in DB.get_nodes():
+        if len(node["rain_data"][date]) == 0:
+            # If no reports on this day, use the linear model
+            is_flooded[node["id"]] = server.linear_model.fit(weather.get_precipitation(date))
     return {node["id"] : node["is_flooded"][date] for node in DB.get_nodes()}

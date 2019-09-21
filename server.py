@@ -20,7 +20,7 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils, testdeyda
+import utils, testdeyda, model
 
 
 
@@ -70,6 +70,7 @@ class MongoDB:
 		self._nodes.update({"id" : node["id"]}, update)
 
 		self._update_avg_level(date, node)
+
 
 	def _update_avg_level(self, date, node):
 		"""
@@ -127,7 +128,7 @@ class MongoDB:
 
 
 db = MongoDB()
-
+linear_model = model.LinearRainModel()
 
 # print(get_nodes())
 
@@ -136,7 +137,7 @@ def server_app(db):
 	Runner for server.
 	"""
 	db.add_all_nodes("coords.txt")
-	model = RFModel(db.get_nodes())
+	global linear_model
 	while True:
 		# Each day, add date as key to dataset and drop the oldest day
 		for i in range(7):
@@ -156,7 +157,7 @@ def server_app(db):
 		# Each week, retrain the model
 		# In production, use weather API data. For now, use generated values to test.
 		# model = RFModel(weather.get_precips(start_date, end_date), db.get_nodes())
-		precipitation = testdeyda.precipitation
+		linear_model = model.LinearRainModel()
 
 
 
