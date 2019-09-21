@@ -57,6 +57,7 @@ def get_average_water_levels(date):
     """
     return {node["id"] : node["avg_levels"][date] for node in DB.get_nodes()}
 
+# OBSELETE
 def get_is_flooded(date):
     """
     Returns a dictionary with key: node id, value: whether the node is flooded on the given date.

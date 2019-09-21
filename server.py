@@ -48,9 +48,23 @@ class MongoDB:
 		Queries the mongoDB database for all nodes
 		:return:
 		"""
+		self.update_is_flooded()
 		return list(self._nodes.find({}, {'_id': False}))
 
-
+	def update_is_flooded(self):
+		for node in self.get_nodes():
+			if len(node["rain_data"][utils.cur_date()]) == 0:
+				# If no reports on this day, use the linear model
+				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
+					node["is_flooded"][node["id"]] = 2
+				else:
+					node["is_flooded"][node["id"]] = 0
+			elif node["is_flooded"][utils.cur_date()]:
+				node["is_flooded"][node["id"]] = 1
+			else:
+				node["is_flooded"][node["id"]] = 0
+		update = {"$set": {"is_flooded": node["is_flooded"]}}
+		self._nodes.update({"id": node["id"]}, update)
 
 	def report_rain_level(self, date, coords, lvl):
 		"""
@@ -77,17 +91,12 @@ class MongoDB:
 		"""
 		Updates the average water level & binary is_flooded at given node, for given date.
 		"""
+
 		node["avg_levels"][date] = np.mean(node["rain_data"][utils.cur_date()])
-		if len(node["rain_data"][date]) == 0:
-			# If no reports on this day, use the linear model
-			if linear_model.fit(weather.get_precipitation(date)):
-				node["is_flooded"][node["id"]] = 2
-			else:
-				node["is_flooded"][node["id"]] = 0
-		elif node["is_flooded"][date]:
-			node["is_flooded"][node["id"]] = 1
+		if node["avg_levels"][date] > utils.FLOODED_THRESHOLD:
+			node["is_flooded"][date] = True
 		else:
-			node["is_flooded"][node["id"]] = 0
+			node["is_flooded"][date] = False
 
 		update = {"$set": {"avg_levels" : node["avg_levels"], "is_flooded" : node["is_flooded"]}}
 		self._nodes.update({"id": node["id"]}, update)
@@ -126,7 +135,7 @@ class MongoDB:
 				"coords": coords,
 				"rain_data": empty_date_lists,
 				"avg_levels": empty_date_scalars,
-				"is_flooded": empty_date_bools,
+				"is_flooded": empty_date_scalars,
 				"entrance": -1
 			}
 			self._nodes.insert(node_dict)
