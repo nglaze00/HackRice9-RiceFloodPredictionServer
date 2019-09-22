@@ -46,6 +46,7 @@ class Graph:
             for nbr, dist in edges.items():
                 graph.add_edge(int(idx), int(nbr) - 1, dist = dist)
                 print((idx, int(nbr) - 1))
+        graph.add_edge(5, 9, dist=1.1)
         return graph
 
     def shortest_path(self, start, end, wet_nodes):

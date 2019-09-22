@@ -739,7 +739,7 @@ def generate_Dates():
 
     return last_string
 
-dates = generate_Dates()
+# dates = generate_Dates()
 
 
 def give_depths(precipitation):
