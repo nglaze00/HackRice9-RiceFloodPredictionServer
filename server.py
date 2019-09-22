@@ -75,25 +75,18 @@ class MongoDB:
 		:param lvl: integer (inches)
 		"""
 
-		print("ahere")
 
 		node = self._nodes.find_one({"id" : node}, {'_id': False})
 
 		if not node:
 			raise KeyError()
 
-		print("here")
 
 		node["rain_data"][date].append(lvl)
 
-		print("orhere")
 
 		update = {"$set": {"rain_data": node["rain_data"]}}
-
-		print("lhere")
 		self._nodes.update({"id" : node["id"]}, update)
-
-		print("ihere")
 
 		self._update_avg_level(date, node)
 
@@ -163,7 +156,6 @@ def server_app(db):
 	"""
 	# db.add_all_nodes("coords.txt")
 	global linear_model
-
 	while True:
 		# Each day, add date as key to dataset and drop the oldest day
 		for i in range(7):

@@ -743,49 +743,47 @@ dates = generate_Dates()
 
 
 def give_depths(precipitation):
+    node_ids = [utils.coords_to_id()[item] for item in node_list]
 
-    nodes_to_depths_for_each_day = {}
+    nodes_to_depths_for_each_day = numpy.empty((utils.DAYS_TO_KEEP, len(node_ids)))
 
-    for item in node_list:
-        coeff = random.randrange(5) / 10
+    for id in node_ids:
+        coeff = 2
+
+        coeff2 = random.randrange(400,500)/100.0
 
 
         integral = 0
-        list_for_node = []
 
         for i in range(len(dates)):
 
-            integral += 20*(3*precipitation[i] - coeff)
+            integral += 40*(coeff2*precipitation[i] - coeff)/3
 
             if integral >= 0:
 
-                list_for_node.append(integral)
+                nodes_to_depths_for_each_day[i][id] = integral
 
             else:
-                integral = 0
-                list_for_node.append(integral)
 
-        nodes_to_depths_for_each_day[item] = list_for_node
+                integral = 0
+
+                nodes_to_depths_for_each_day[i][id] = 0
 
     return nodes_to_depths_for_each_day
 
-precipitation = [numpy.random.normal(0.5,0.125) for i in range(len(dates))]
 
-def format_and_save_data(precipitation, depths_dict):
+precipitation = [numpy.random.normal(0.30,0.125) for i in range(len(dates))]
+print (precipitation)
+depths = give_depths(precipitation)
+def save_data(precipitation, depths):
     """
     Reformats generated data into numpy arrays, and saves them to files.
     """
     numpy.savetxt("precip_train.txt", precipitation)
-    depths = numpy.empty((len(depths_dict[list(depths_dict.keys())[0]]), len(depths_dict.keys())))
-    for coord, id in utils.coords_to_id().items():
-        depths[:, id] = depths_dict[coord]
-
-    depths *= 9 / numpy.max(depths)
-    # print(len(depths[depths > 4]))
     numpy.savetxt("depths_train.txt", depths)
 
 
 
 
-
-format_and_save_data(precipitation, give_depths(precipitation))
+print(depths)
+# save_data(precipitation, depths)
