@@ -52,7 +52,7 @@ class MongoDB:
 		:return:
 		"""
 		self.update_is_flooded()
-		return list(self._nodes.find({}, {'_id': False}))
+		return list(self._nodes.find({}, {'_id': False}).sort("id"))
 
 	def update_is_flooded(self):
 		for node in self._nodes.find({}, {'_id': False}):
@@ -211,7 +211,9 @@ def handleFloodReport():
 @cross_origin(supports_credentials=True)
 def handlePath():
 	print(request.data)
-	print(request.get_json(force=True)["node"])
+	print(request.get_json(force=True)["firstNode"])
+	print(request.get_json(force=True)["secondNode"])
+
 
 	##
 	# Data contains:
@@ -219,8 +221,8 @@ def handlePath():
 	# endNode is the id number
 	##
 	data = request.get_json(force=True)
-	startnode = data["startNode"]
-	endnode = data["endNode"]
+	startnode = int(data["firstNode"])
+	endnode = int(data["secondNode"])
 
 	# make the path here
 	wet_nodes = []
@@ -229,7 +231,7 @@ def handlePath():
 			wet_nodes.append(node["id"])
 	path_type, path = db.graph().shortest_path(startnode, endnode, wet_nodes)
 
-	return {"path_type": path_type, "path": path}
+	return jsonify({"path_type": path_type, "path": path, "path_coords" : [db.get_node("id", node_id)["coords"] for node_id in path]})
 
 @flask_app.route('/nodes')
 def getNodes():
