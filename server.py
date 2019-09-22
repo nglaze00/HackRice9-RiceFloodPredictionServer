@@ -62,6 +62,7 @@ class MongoDB:
 				node["is_flooded"][node["id"]] = 1
 			else:
 				node["is_flooded"][node["id"]] = 0
+
 		update = {"$set": {"is_flooded": node["is_flooded"]}}
 		self._nodes.update({"id": node["id"]}, update)
 
@@ -151,7 +152,6 @@ def server_app(db):
 	"""
 	# db.add_all_nodes("coords.txt")
 	global linear_model
-
 	while True:
 		# Each day, add date as key to dataset and drop the oldest day
 		for i in range(7):
