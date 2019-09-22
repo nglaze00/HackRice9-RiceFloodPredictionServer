@@ -55,6 +55,6 @@ def coords_to_id():
             continue
         splits = line.split(" ")
         coords = (float(splits[1][:-1]), float(splits[2]))
-
+        print(coords)
         m[coords] = id
     return m

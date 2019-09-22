@@ -32,7 +32,10 @@ class MongoDB:
 			maxPoolSize=50, connect=False)
 		self._db = pymongo.database.Database(self._mongo, 'test')
 		self._nodes = pymongo.collection.Collection(self._db, 'node')
+		self._graph = graphs.Graph(graphs.GRAPH_FILENAME)
 
+	def graph(self):
+		return self._graph
 
 	def get_node(self, key, value):
 		"""
@@ -122,12 +125,11 @@ class MongoDB:
 		:param filename: string
 		"""
 		self._nodes.delete_many({})
-		graph = graphs.Graph(graphs.GRAPH_FILENAME)
 		empty_date_lists = {date: [] for date in utils.generate_dates()}
 		empty_date_scalars = {date: 0 for date in utils.generate_dates()}
 		empty_date_bools = {date: False for date in utils.generate_dates()}
 
-		for id, data in graph.nodes():
+		for id, data in self._graph.nodes():
 			node_dict = {
 				"id": id,
 				"coords": data["coords"],
@@ -220,11 +222,14 @@ def handlePath():
 	startnode = data["startNode"]
 	endnode = data["endNode"]
 
-	path = None
-
 	# make the path here
+	wet_nodes = []
+	for node in db.get_nodes():
+		if node["is_flooded"][utils.cur_date()]:
+			wet_nodes.append(node["id"])
+	path_type, path = db.graph().shortest_path(startnode, endnode, wet_nodes)
 
-	return path
+	return {"path_type": path_type, "path": path}
 
 @flask_app.route('/nodes')
 def getNodes():
