@@ -50,7 +50,7 @@ class LinearRainModel:
 
             self.thresholds.append(np.mean(flood_levels))
 
-
+        self.thresholds = [thresh * 6 for thresh in self.thresholds]
     def fit(self, precip_today):
         """
         Given an amount of rain (in inches), return a list where flooded[i] is whether node i will be flooded

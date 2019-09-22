@@ -20,7 +20,7 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils, testdeyda, model, node_api, graphs
+import utils, model, node_api, graphs
 import weather
 
 
@@ -55,7 +55,7 @@ class MongoDB:
 		for node in self._nodes.find({}, {'_id': False}):
 			if len(node["rain_data"][utils.cur_date()]) == 0:
 				# If no reports on this day, use the linear model
-				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
+				if linear_model.fit(weather.get_precipitation(utils.cur_date()))[node["id"]] == True:
 					node["is_flooded"][utils.cur_date()] = 2
 				else:
 					node["is_flooded"][utils.cur_date()] = 0
@@ -97,7 +97,7 @@ class MongoDB:
 		"""
 
 		node["avg_levels"][date] = np.mean(node["rain_data"][utils.cur_date()])
-		if node["avg_levels"][date] > utils.FLOODED_THRESHOLD:
+		if node["avg_levels"][date] >= utils.FLOODED_THRESHOLD:
 			node["is_flooded"][date] = True
 		else:
 			node["is_flooded"][date] = False
@@ -204,6 +204,27 @@ def handleFloodReport():
 
 
 	return request.form
+
+@flask_app.route('/path', methods=["POST"])
+@cross_origin(supports_credentials=True)
+def handlePath():
+	print(request.data)
+	print(request.get_json(force=True)["node"])
+
+	##
+	# Data contains:
+	# startNode is the id number
+	# endNode is the id number
+	##
+	data = request.get_json(force=True)
+	startnode = data["startNode"]
+	endnode = data["endNode"]
+
+	path = None
+
+	# make the path here
+
+	return path
 
 @flask_app.route('/nodes')
 def getNodes():

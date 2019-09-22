@@ -6,4 +6,4 @@ def get_precipitation(date):
     """
     Returns the precipitation on given date. Hardcoded for now
     """
-    return 0.4
+    return 3
