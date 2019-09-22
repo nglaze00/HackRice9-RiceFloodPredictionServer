@@ -62,49 +62,52 @@ class MongoDB:
 		:return:
 		"""
 		self.update_is_flooded()
-		return list(self._nodes.find({}, {'_id': False}).sort("id"))
-	def predict_is_flooded(self):
-		"""
-		Predicts the value of all nodes with no reported data, using either the linear or XGBoost models.
-		Uses reported values for those that have it.
-		"""
-		queried_nodes = self._nodes.find({}, {'_id' : False}).sort("id")
-		linear_predictions = self.linear_model.fit(weather.get_precipitation(utils.cur_date()))
-		# Insert linear prediction for values with no reported data
-		for node in queried_nodes:
-			if len(node["rain_data"][utils.cur_date()]) == 0:
-				if linear_predictions[node["id"]] == True:
-					node["is_flooded"][utils.cur_date()] = 2
-				else:
-					node["is_flooded"][utils.cur_date()] = 0
-			else:
-				if node["is_flooded"][utils.cur_date()]:
-					node["is_flooded"][utils.cur_date()] = 1
-				else:
-					node["is_flooded"][utils.cur_date()] = 0
-		reported_with_linear = [node["is_flooded"][utils.cur_date()] for node in queried_nodes]
-		reported_with_linear_and_XGB = list(reported_with_linear)
-		# Replace linear predictions with XGB predictions when possible
-		for node_id in self.XGB_models.keys():
-			if len(queried_nodes[node_id]["rain_data"][utils.cur_date()]) == 0:
-				xgb_prediction = self.XGB_models[node_id].predict(reported_with_linear[:node_id]
-														  + reported_with_linear[node_id + 1:])
-				print(xgb_prediction)
-				if xgb_prediction:
-					reported_with_linear_and_XGB[node_id] = 2
-				else:
-					reported_with_linear_and_XGB[node_id] = 0
-		return reported_with_linear_and_XGB
-	def update_is_flooded(self):
-		"""
-		Predicts is_flooded for all nodes and uploads the data to the mongoDB server.
-		:return:
-		"""
-		reports_plus_predictions = self.predict_is_flooded()
-		for node in self._nodes.find({}, {'_id': False}):
+		return list(self._nodes.find({}, {'_id': False}))
 
-			update = {"$set": {"is_flooded": reports_plus_predictions[node["id"]]}}
-			self._nodes.update({"id": node["id"]}, update)
+
+def predict_is_flooded(self):
+    """
+        Predicts the value of all nodes with no reported data, using either the linear or XGBoost models.
+        Uses reported values for those that have it.
+        """
+    queried_nodes = self._nodes.find({}, {'_id': False}).sort("id")
+    linear_predictions = self.linear_model.fit(weather.get_precipitation(utils.cur_date()))
+    # Insert linear prediction for values with no reported data
+    for node in queried_nodes:
+        if len(node["rain_data"][utils.cur_date()]) == 0:
+            if linear_predictions[node["id"]] == True:
+                node["is_flooded"][utils.cur_date()] = 2
+            else:
+                node["is_flooded"][utils.cur_date()] = 0
+        else:
+            if node["is_flooded"][utils.cur_date()]:
+                node["is_flooded"][utils.cur_date()] = 1
+            else:
+                node["is_flooded"][utils.cur_date()] = 0
+    reported_with_linear = [node["is_flooded"][utils.cur_date()] for node in queried_nodes]
+    reported_with_linear_and_XGB = list(reported_with_linear)
+    # Replace linear predictions with XGB predictions when possible
+    for node_id in self.XGB_models.keys():
+        if len(queried_nodes[node_id]["rain_data"][utils.cur_date()]) == 0:
+            xgb_prediction = self.XGB_models[node_id].predict(reported_with_linear[:node_id]
+                                                              + reported_with_linear[node_id + 1:])
+            print(xgb_prediction)
+            if xgb_prediction:
+                reported_with_linear_and_XGB[node_id] = 2
+            else:
+                reported_with_linear_and_XGB[node_id] = 0
+    return reported_with_linear_and_XGB
+
+
+def update_is_flooded(self):
+    """
+        Predicts is_flooded for all nodes and uploads the data to the mongoDB server.
+        :return:
+        """
+    reports_plus_predictions = self.predict_is_flooded()
+    for node in self._nodes.find({}, {'_id': False}):
+        update = {"$set": {"is_flooded": reports_plus_predictions[node["id"]]}}
+        self._nodes.update({"id": node["id"]}, update)
 
 	def report_rain_level(self, date, node, lvl):
 		"""
@@ -252,7 +255,9 @@ def handleFloodReport():
 @cross_origin(supports_credentials=True)
 def handlePath():
 	print(request.data)
-	print(request.get_json(force=True)["node"])
+	print(request.get_json(force=True)["firstNode"])
+	print(request.get_json(force=True)["secondNode"])
+
 
 	##
 	# Data contains:
@@ -260,8 +265,8 @@ def handlePath():
 	# endNode is the id number
 	##
 	data = request.get_json(force=True)
-	startnode = data["startNode"]
-	endnode = data["endNode"]
+	startnode = int(data["firstNode"])
+	endnode = int(data["secondNode"])
 
 	# make the path here
 	wet_nodes = []
@@ -270,7 +275,7 @@ def handlePath():
 			wet_nodes.append(node["id"])
 	path_type, path = db.graph().shortest_path(startnode, endnode, wet_nodes)
 
-	return {"path_type": path_type, "path": path, "path_coords": [db.get_node("id", node_id)["coords"] for node_id in path]}
+	return jsonify({"path_type": path_type, "path": path, "path_coords" : [db.get_node("id", node_id)["coords"] for node_id in path]})
 
 @flask_app.route('/nodes')
 def getNodes():
