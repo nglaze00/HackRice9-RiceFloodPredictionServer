@@ -19,7 +19,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
-import node_api
 
 import utils, testdeyda, model, node_api, graphs
 import weather
@@ -56,8 +55,8 @@ class MongoDB:
 		for node in self._nodes.find({}, {'_id': False}):
 			if len(node["rain_data"][utils.cur_date()]) == 0:
 				# If no reports on this day, use the linear model
-				if linear_model.fit(weather.get_precipitation(utils.cur_date()))[node["id"]]:
-					node["is_flooded"][node["id"]] = 2
+				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
+					node["is_flooded"][utils.cur_date()] = 2
 				else:
 					node["is_flooded"][utils.cur_date()] = 0
 			elif node["is_flooded"][utils.cur_date()]:
