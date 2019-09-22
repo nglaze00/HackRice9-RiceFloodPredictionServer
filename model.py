@@ -33,14 +33,19 @@ class LinearRainModel:
             
             flood_levels = []
 
+           # mean = 0
+            #count = 0
+
+
+
 
             for date in range(len(depths)):
 
 
-                if depths[date][node] >= utils.FLOODED_THRESHOLD:
+                if depths[date][node] >= 4:
 
                     flood_levels.append(precip[date])
-
+                   # mean += precip[date]
 
 
             self.thresholds.append(np.mean(flood_levels))
