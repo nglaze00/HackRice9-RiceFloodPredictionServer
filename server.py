@@ -20,8 +20,9 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils, testdeyda, model, node_api
+import utils, testdeyda, model, node_api, graphs
 import weather
+
 
 
 class MongoDB:
@@ -54,7 +55,7 @@ class MongoDB:
 		for node in self.get_nodes():
 			if len(node["rain_data"][utils.cur_date()]) == 0:
 				# If no reports on this day, use the linear model
-				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
+				if linear_model.fit(weather.get_precipitation(utils.cur_date()))[node["id"]]:
 					node["is_flooded"][node["id"]] = 2
 				else:
 					node["is_flooded"][node["id"]] = 0
@@ -112,31 +113,25 @@ class MongoDB:
 		update = {"$set": {"rain_data": node["rain_data"]}}
 		self._nodes.update({"id": node["id"]}, update)
 
-	def add_all_nodes(self, filename):
+	def add_all_nodes(self):
 		"""
 		Clears all data from database, then adds all nodes from filename to the mongoDB database
 		:param filename: string
 		"""
 		self._nodes.delete_many({})
-
+		graph = graphs.Graph(graphs.GRAPH_FILENAME)
 		empty_date_lists = {date: [] for date in utils.generate_dates()}
 		empty_date_scalars = {date: 0 for date in utils.generate_dates()}
 		empty_date_bools = {date: False for date in utils.generate_dates()}
-		f = open(filename)
-		coords = []
-		for node_id, line in enumerate(f.readlines()):
-			if line == "\n":
-				continue
-			coords_str = line.split(", ")
-			coords_str[1] = coords_str[1][:-2]
-			coords = tuple(map(np.float, line.split(", ")))
+
+		for id, data in graph.nodes():
 			node_dict = {
-				"id": node_id,
-				"coords": coords,
+				"id": id,
+				"coords": data["coords"],
 				"rain_data": empty_date_lists,
 				"avg_levels": empty_date_scalars,
 				"is_flooded": empty_date_scalars,
-				"entrance": -1
+				"entrance": data["entrance"]
 			}
 			self._nodes.insert(node_dict)
 
@@ -150,7 +145,7 @@ def server_app(db):
 	"""
 	Runner for server.
 	"""
-	# db.add_all_nodes("coords.txt")
+	db.add_all_nodes()
 	global linear_model
 	while True:
 		# Each day, add date as key to dataset and drop the oldest day
