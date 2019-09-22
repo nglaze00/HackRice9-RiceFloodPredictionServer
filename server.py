@@ -108,17 +108,6 @@ class MongoDB:
 		update = {"$set": {"avg_levels" : node["avg_levels"], "is_flooded" : node["is_flooded"]}}
 		self._nodes.update({"id": node["id"]}, update)
 
-	def clear_rain_level(self, date, coords): # todo remove
-		node = self._nodes.find_one({"coords": coords})
-
-		if not node:
-			raise KeyError()
-
-		node["rain_data"][date] = []
-
-		update = {"$set": {"rain_data": node["rain_data"]}}
-		self._nodes.update({"id": node["id"]}, update)
-
 	def add_all_nodes(self):
 		"""
 		Clears all data from database, then adds all nodes from filename to the mongoDB database
