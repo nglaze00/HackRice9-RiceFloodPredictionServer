@@ -39,10 +39,10 @@ def generate_dates():
     for yyyy in ["2018", "2019"]:
         for mm in range(1, 13):
             for dd in range(1, days_per_mo[mm] + 1):
-                if mm == 9 and dd == 22 and yyyy == "2019":
+                if mm == 9 and dd == 23 and yyyy == "2019":
                     return dates
                 dates.append(yyyy + fmt(mm) + fmt(dd))
-    return dates
+    return dates[1:]
 
 
 def coords_to_id():

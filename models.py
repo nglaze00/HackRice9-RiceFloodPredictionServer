@@ -1,5 +1,5 @@
 import numpy as np
-import xgboost as xgb
+# import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
@@ -25,11 +25,11 @@ class NodeFloodPredictor:
         :param target_node: node for which predictions will be made
         """
         self.node = target_node
-        self.depths_bool = np.loadtxt("depths_train.txt") >= utils.FLOODED_THRESHOLD
+        self.depths_bool = np.loadtxt("depths_train.txt")[:, :39] >= utils.FLOODED_THRESHOLD
         # self.model = xgb.XGBClassifier()
         self.model = RandomForestClassifier(n_estimators=100)
         # Split into train / test data
-        self.X_train, self.X_test, self.y_train, self.y_test = self.partition_data(self.depths_bool, 0.995)
+        self.X_train, self.X_test, self.y_train, self.y_test = self.partition_data(self.depths_bool, 0.9)
 
 
     def partition_data(self, depths, ratio):
