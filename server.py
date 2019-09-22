@@ -20,8 +20,8 @@ from flask_cors import CORS, cross_origin
 from threading import Thread
 import time
 
-import utils, testdeyda, model
-
+import utils, testdeyda, model, node_api
+import weather
 
 
 class MongoDB:
@@ -47,9 +47,23 @@ class MongoDB:
 		Queries the mongoDB database for all nodes
 		:return:
 		"""
+		self.update_is_flooded()
 		return list(self._nodes.find({}, {'_id': False}))
 
-
+	def update_is_flooded(self):
+		for node in self.get_nodes():
+			if len(node["rain_data"][utils.cur_date()]) == 0:
+				# If no reports on this day, use the linear model
+				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
+					node["is_flooded"][node["id"]] = 2
+				else:
+					node["is_flooded"][node["id"]] = 0
+			elif node["is_flooded"][utils.cur_date()]:
+				node["is_flooded"][node["id"]] = 1
+			else:
+				node["is_flooded"][node["id"]] = 0
+		update = {"$set": {"is_flooded": node["is_flooded"]}}
+		self._nodes.update({"id": node["id"]}, update)
 
 	def report_rain_level(self, date, coords, lvl):
 		"""
@@ -120,7 +134,7 @@ class MongoDB:
 				"coords": coords,
 				"rain_data": empty_date_lists,
 				"avg_levels": empty_date_scalars,
-				"is_flooded": empty_date_bools,
+				"is_flooded": empty_date_scalars,
 				"entrance": -1
 			}
 			self._nodes.insert(node_dict)
@@ -152,7 +166,7 @@ def server_app(db):
 
 				node["rain_data"][utils.cur_date()] = []
 				node["avg_levels"][utils.cur_date()] = 0
-				node["is_flooded"][utils.cur_date()] = False
+				node["is_flooded"][utils.cur_date()] = 0
 
 		# Each week, retrain the model
 		# In production, use weather API data. For now, use generated values to test.
@@ -187,7 +201,9 @@ def handleFloodReport():
 	##
 	data = request.get_json(force=True)
 	node = data["node"]
-	type = data["type"]
+	water_level = data["type"]
+	node_api.report_water_level(node["coords"], water_level * 2) # convert to inches
+
 
 	return request.form
 
