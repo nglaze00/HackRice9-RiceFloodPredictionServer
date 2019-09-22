@@ -8,6 +8,9 @@ Functions for calculating shortest dry paths between nodes
 import networkx as nx
 import ast
 
+
+GRAPH_FILENAME = "NewNodes.txt"
+
 class Graph:
     """
     Graph representations + operations on Rice campus graph
@@ -28,13 +31,16 @@ class Graph:
         """
         graph = nx.Graph()
         for idx, line in enumerate(open(filename).readlines()):
+            print([line])
             if line == "\n":
                 continue
             splits = line.split(" ", 4)
             coords = (float(splits[1][:-1]), float(splits[2]))
             edges = ast.literal_eval(splits[-1].split("}")[0] + "}")
             potential_entrance = splits[-1].split("}")[-1].split(" ")[-1]
+            print([potential_entrance])
             if potential_entrance != "\n":
+
                 graph.add_node(idx, coords=coords, entrance=int(potential_entrance[:-1]))
             else:
                 graph.add_node(idx, coords=coords, entrance=-1)
@@ -70,9 +76,3 @@ class Graph:
 g = Graph("nodes.txt")
 print(g.nodes())
 
-
-
-test = nx.Graph()
-test.add_node(1)
-test.add_node(2)
-print(nx.shortest_path(test, 1, 2))
