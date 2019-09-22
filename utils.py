@@ -50,11 +50,11 @@ def coords_to_id():
     Returns a dictionary mapping node coordinates to their ID
     """
     m = {}
-    for id, line in enumerate(open("coords.txt").readlines()):
+    for id, line in enumerate(open("NewNodes.txt").readlines()):
         if line == "\n":
             continue
-        coords_str = line.split(", ")
-        coords_str[1] = coords_str[1][:-2]
-        coords = tuple(map(np.float, line.split(", ")))
+        splits = line.split(" ")
+        coords = (float(splits[1][:-1]), float(splits[2]))
+
         m[coords] = id
     return m
