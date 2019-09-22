@@ -6,7 +6,7 @@ Functions for calculating shortest dry paths between nodes
 
 """
 import networkx as nx
-import ast
+import ast, time
 
 
 GRAPH_FILENAME = "NewNodes.txt"
@@ -42,9 +42,10 @@ class Graph:
                 graph.add_node(idx, coords=coords, entrance=int(potential_entrance[:-1]))
             else:
                 graph.add_node(idx, coords=coords, entrance=-1)
+
             for nbr, dist in edges.items():
                 graph.add_edge(int(idx), int(nbr) - 1, dist = dist)
-
+                print((idx, int(nbr) - 1))
         return graph
 
     def shortest_path(self, start, end, wet_nodes):
@@ -60,11 +61,14 @@ class Graph:
 
         for node in wet_nodes:
             working_graph.remove_node(node)
-        path = nx.shortest_path(working_graph, start, end, weight="dist")
-        if len(path) != 1 or start == end:
-            return ("dry", path)
+        try:
+            path = nx.shortest_path(working_graph, start, end, weight="dist")
+            if len(path) != 1 or start == end:
+                return ("dry", path)
 
+        except:
+            pass
         return ("wet", nx.shortest_path(self.graph, start, end, weight="dist"))
 
 
-
+g = Graph(GRAPH_FILENAME)

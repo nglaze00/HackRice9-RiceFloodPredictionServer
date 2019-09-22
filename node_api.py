@@ -78,3 +78,5 @@ def get_is_flooded(date):
         else:
             is_flooded[node["id"]] = 0
     return {node["id"] : node["is_flooded"][date] for node in DB.get_nodes()}
+
+# OBSELETE
