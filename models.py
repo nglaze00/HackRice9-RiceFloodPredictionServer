@@ -2,9 +2,10 @@ import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.ensemble import RandomForestClassifier
 
 import utils
-# TODO MACHINE LEARNING W00
+# TODO change back to XGBoost
 
 XGB_PARAMS =  {
             'eta': 0.3,
@@ -25,10 +26,10 @@ class NodeFloodPredictor:
         """
         self.node = target_node
         self.depths_bool = np.loadtxt("depths_train.txt") >= utils.FLOODED_THRESHOLD
-        self.model = xgb.XGBClassifier()
-
+        # self.model = xgb.XGBClassifier()
+        self.model = RandomForestClassifier(n_estimators=100)
         # Split into train / test data
-        self.X_train, self.X_test, self.y_train, self.y_test = self.partition_data(self.depths_bool, 0.9)
+        self.X_train, self.X_test, self.y_train, self.y_test = self.partition_data(self.depths_bool, 0.995)
 
 
     def partition_data(self, depths, ratio):
@@ -63,9 +64,9 @@ class NodeFloodPredictor:
         accuracy = accuracy_score(self.y_test, y_pred)
         print("Accuracy: %.2f%%" % (accuracy * 100.0))
 
-n = NodeFloodPredictor(14)
-n.train()
-n.test()
+# n = NodeFloodPredictor(14)
+# n.train()
+# n.test()
 class LinearRainModel:
     """
     Model that predicts which nodes will flood given only today's precipitation.
