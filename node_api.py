@@ -10,13 +10,13 @@ linear_model = server.linear_model
 
 # INPUT
 
-def report_water_level(coords, lvl):
+def report_water_level(node, lvl):
     """
     Reports a water level at the given coordinates; adds value to mongoDB database
-    :param coords: (latitude, longitude)
+    :param node: node id
     :param lvl: integer representing water level @ node
     """
-    DB.report_rain_level(utils.cur_date(), coords, lvl)
+    DB.report_rain_level(utils.cur_date(), node, lvl)
 
 # OUTPUT
 

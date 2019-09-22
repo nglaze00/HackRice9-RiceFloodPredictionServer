@@ -52,37 +52,48 @@ class MongoDB:
 		return list(self._nodes.find({}, {'_id': False}))
 
 	def update_is_flooded(self):
-		for node in self.get_nodes():
+		for node in self._nodes.find({}, {'_id': False}):
 			if len(node["rain_data"][utils.cur_date()]) == 0:
 				# If no reports on this day, use the linear model
 				if linear_model.fit(weather.get_precipitation(utils.cur_date())):
-					node["is_flooded"][node["id"]] = 2
+					node["is_flooded"][utils.cur_date()] = 2
 				else:
-					node["is_flooded"][node["id"]] = 0
+					node["is_flooded"][utils.cur_date()] = 0
 			elif node["is_flooded"][utils.cur_date()]:
-				node["is_flooded"][node["id"]] = 1
+				node["is_flooded"][utils.cur_date()] = 1
 			else:
-				node["is_flooded"][node["id"]] = 0
-		update = {"$set": {"is_flooded": node["is_flooded"]}}
-		self._nodes.update({"id": node["id"]}, update)
+				node["is_flooded"][utils.cur_date()] = 0
+			update = {"$set": {"is_flooded": node["is_flooded"]}}
+			self._nodes.update({"id": node["id"]}, update)
 
-	def report_rain_level(self, date, coords, lvl):
+	def report_rain_level(self, date, node, lvl):
 		"""
 		Adds the measured rain level @ coords on date to that node's rain level dataset in mongoDB.
 		Also updates avg level & is_flooded for that date.
 		:param date: YYYYMMDD
-		:param coords: (lat, long)
+		:param node: node id
 		:param lvl: integer (inches)
 		"""
-		node = self._nodes.find_one({"coords" : coords}, {'_id': False})
+
+		print("ahere")
+
+		node = self._nodes.find_one({"id" : node}, {'_id': False})
 
 		if not node:
 			raise KeyError()
 
+		print("here")
+
 		node["rain_data"][date].append(lvl)
 
+		print("orhere")
+
 		update = {"$set": {"rain_data": node["rain_data"]}}
+
+		print("lhere")
 		self._nodes.update({"id" : node["id"]}, update)
+
+		print("ihere")
 
 		self._update_avg_level(date, node)
 
@@ -197,13 +208,13 @@ def handleFloodReport():
 
 	##
 	# Data contains:
-	# node
+	# node is the id number
 	# type (0 is lowest, 3 is worst severity)
 	##
 	data = request.get_json(force=True)
 	node = data["node"]
 	water_level = data["type"]
-	node_api.report_water_level(node["coords"], water_level * 2) # convert to inches
+	node_api.report_water_level(int(node), water_level * 2) # convert to inches
 
 
 	return request.form
