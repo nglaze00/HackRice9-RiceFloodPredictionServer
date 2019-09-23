@@ -1,5 +1,7 @@
 # HackRice9-RiceFloodPredictionServer
 This is the backend (server) code.
+Detailed description: https://devpost.com/software/put-it-in-rice-flood-prediction-navigation-on-rice-s-campus
+
 
 Frontend (website) code: https://github.com/nglaze00/HackRice9-RiceFloodPredictionWebsite
 
